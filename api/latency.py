@@ -34,7 +34,7 @@ class MetricsRequest(BaseModel):
     threshold_ms: float
 
 # POST endpoint
-@app.post("/api/latency")
+@app.post("/")
 async def latency_metrics(req: MetricsRequest):
     results = {}
     for region in req.regions:
