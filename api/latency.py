@@ -1,13 +1,14 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import os
 
+# Init FastAPI
 app = FastAPI()
 
-# Allow all origins for POST
+# Enable CORS (any origin, POST only)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,11 +17,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load telemetry data once
-# assume telemetry.csv is placed in root of your rep
+# Load telemetry dataset once
 data_path = os.path.join(os.path.dirname(__file__), "..", "telemetry.csv")
 df = pd.read_csv(data_path)
 
+# Input schema
 class MetricsRequest(BaseModel):
     regions: list[str]
     threshold_ms: int
@@ -34,6 +35,7 @@ async def latency_metrics(req: MetricsRequest):
             continue
         latencies = region_df["latency_ms"]
         uptimes = region_df["uptime"]
+
         results[region] = {
             "avg_latency": float(latencies.mean()),
             "p95_latency": float(np.percentile(latencies, 95)),
@@ -41,3 +43,7 @@ async def latency_metrics(req: MetricsRequest):
             "breaches": int((latencies > req.threshold_ms).sum())
         }
     return results
+
+# Vercel entrypoint adapter
+from mangum import Mangum
+handler = Mangum(app)
