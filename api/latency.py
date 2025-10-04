@@ -4,11 +4,12 @@ from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import os
+import json
 
-# Init FastAPI
+# Initialize FastAPI app
 app = FastAPI()
 
-# Enable CORS (any origin, POST only)
+# Enable CORS for POST requests from any origin
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,15 +18,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load telemetry dataset once
-data_path = os.path.join(os.path.dirname(__file__), "..", "telemetry.csv")
-df = pd.read_csv(data_path)
+# Load telemetry JSON once
+data_path = os.path.join(os.path.dirname(__file__), "..", "vercel.json")
+with open(data_path) as f:
+    data = json.load(f)
 
-# Input schema
+# Convert JSON to DataFrame
+df = pd.DataFrame(data)
+# Rename uptime_pct column for easier access
+df = df.rename(columns={"uptime_pct": "uptime"})
+
+# Request schema
 class MetricsRequest(BaseModel):
     regions: list[str]
-    threshold_ms: int
+    threshold_ms: float
 
+# POST endpoint
 @app.post("/api/latency")
 async def latency_metrics(req: MetricsRequest):
     results = {}
@@ -44,6 +52,6 @@ async def latency_metrics(req: MetricsRequest):
         }
     return results
 
-# Vercel entrypoint adapter
+# Vercel serverless adapter
 from mangum import Mangum
 handler = Mangum(app)
