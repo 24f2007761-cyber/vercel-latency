@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # Load telemetry JSON once
-data_path = os.path.join(os.path.dirname(__file__), "..", "vercel.json")
+data_path = os.path.join(os.path.dirname(__file__), "..", "telemetry.json")
 with open(data_path) as f:
     data = json.load(f)
 
