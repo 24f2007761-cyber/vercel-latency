@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # Load telemetry data once
-# assume telemetry.csv is placed in root of your repo
+# assume telemetry.csv is placed in root of your rep
 data_path = os.path.join(os.path.dirname(__file__), "..", "telemetry.csv")
 df = pd.read_csv(data_path)
 
