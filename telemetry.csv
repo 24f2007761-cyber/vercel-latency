@@ -1,0 +1,5 @@
+region,latency_ms,uptime
+emea,120,0.99
+emea,200,0.97
+apac,150,0.95
+apac,190,0.96
