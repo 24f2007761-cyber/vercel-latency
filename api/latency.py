@@ -6,10 +6,9 @@ import numpy as np
 import os
 import json
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Enable CORS for POST requests from any origin
+# Enable CORS for POST requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,17 +17,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load telemetry JSON once
+# Load telemetry data
 data_path = os.path.join(os.path.dirname(__file__), "..", "telemetry.json")
 with open(data_path) as f:
     data = json.load(f)
 
-# Convert JSON to DataFrame
 df = pd.DataFrame(data)
-# Rename uptime_pct column for easier access
 df = df.rename(columns={"uptime_pct": "uptime"})
 
-# Request schema
+# Request model
 class MetricsRequest(BaseModel):
     regions: list[str]
     threshold_ms: float
@@ -51,7 +48,3 @@ async def latency_metrics(req: MetricsRequest):
             "breaches": int((latencies > req.threshold_ms).sum())
         }
     return results
-
-# Vercel serverless adapter
-from mangum import Mangum
-handler = Mangum(app)
