@@ -2,19 +2,29 @@ import json
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Response
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+@app.middleware("http")
+async def add_cors(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+    else:
+        response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 
 DATA = json.loads((Path(__file__).resolve().parent.parent / "telemetry.json").read_text())
+
+
+@app.get("/api/latency")
+def latency_get():
+    return {"status": "ok", "usage": "POST {regions: [...], threshold_ms: N}"}
 
 
 @app.post("/api/latency")
@@ -34,4 +44,4 @@ def latency(body: dict):
             "avg_uptime": round(float(up.mean()), 3),
             "breaches": int((lat > threshold).sum()),
         }
-    return {"regions": out}
+    return {"regions": out, **out}
